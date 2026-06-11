@@ -1,0 +1,101 @@
+from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
+from filesys.models import Department, SystemSettings
+
+
+class Command(BaseCommand):
+    help = "Initialize PaperLessGov system with sample data"
+
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS("Initializing PaperLessGov system..."))
+
+        # Create departments
+        departments_data = [
+            {
+                "code": "FIN",
+                "name": "Finance Department",
+                "description": "Handles all financial matters, budgets, and accounting",
+            },
+            {
+                "code": "HR",
+                "name": "Human Resources",
+                "description": "Employee management, recruitment, and personnel",
+            },
+            {
+                "code": "IT",
+                "name": "Information Technology",
+                "description": "Technical infrastructure and software development",
+            },
+            {
+                "code": "LEG",
+                "name": "Legal Department",
+                "description": "Legal affairs, compliance, and regulations",
+            },
+            {
+                "code": "OPS",
+                "name": "Operations",
+                "description": "Day-to-day operations and logistics",
+            },
+            {
+                "code": "MKT",
+                "name": "Marketing & Communications",
+                "description": "Public relations and marketing campaigns",
+            },
+        ]
+
+        created_count = 0
+        for dept_data in departments_data:
+            dept, created = Department.objects.get_or_create(
+                code=dept_data["code"],
+                defaults={
+                    "name": dept_data["name"],
+                    "description": dept_data["description"],
+                },
+            )
+            if created:
+                created_count += 1
+                self.stdout.write(
+                    f"  [+] Created department: {dept.code} - {dept.name}"
+                )
+            else:
+                self.stdout.write(f"  [-] Department already exists: {dept.code}")
+
+        # Create system settings
+        settings_data = [
+            {
+                "key": "system_name",
+                "value": "PaperLessGov",
+                "description": "Name of the system",
+            },
+            {
+                "key": "default_priority",
+                "value": "medium",
+                "description": "Default priority for new files",
+            },
+            {
+                "key": "enable_notifications",
+                "value": "true",
+                "description": "Enable email notifications",
+            },
+        ]
+
+        for setting_data in settings_data:
+            setting, created = SystemSettings.objects.get_or_create(
+                key=setting_data["key"], defaults=setting_data
+            )
+            if created:
+                self.stdout.write(f"  [+] Created system setting: {setting.key}")
+
+        self.stdout.write(self.style.SUCCESS(f"\n[*] System initialized successfully!"))
+        self.stdout.write(f"    - {created_count} departments created")
+        self.stdout.write(f"\nNext steps:")
+        self.stdout.write(
+            f"    1. Create a superuser: python manage.py createsuperuser"
+        )
+        self.stdout.write(f"    2. Run the server: python manage.py runserver")
+        self.stdout.write(
+            f"    3. Visit http://127.0.0.1:8000/admin/ to assign department heads"
+        )
+        self.stdout.write(
+            f"    4. Visit http://127.0.0.1:8000/ to access the application"
+        )
